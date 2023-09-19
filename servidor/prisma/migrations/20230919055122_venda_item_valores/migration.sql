@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `VendaItem` ADD COLUMN `valorTotal` DECIMAL(65, 30) NOT NULL DEFAULT 0,
+    ADD COLUMN `valorUnitario` DECIMAL(65, 30) NOT NULL DEFAULT 0;

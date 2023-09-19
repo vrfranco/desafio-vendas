@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Produto {
+  id        Int         @id @default(autoincrement())
+  nome      String      @unique @db.VarChar(100)
+  descricao String      @db.VarChar(255)
+  valor     Decimal     @db.Decimal(10, 2)
+  tipo      ProdutoTipo @default(Simples)
+  criado    DateTime    @default(now())
+  alterado  DateTime?   @updatedAt
+
+  agrupado     ProdutoAgrupado[]    @relation("referente")
+  agrupados    ProdutoAgrupado[]    @relation("origem")
+  configuravel ProdutoConfiguravel?
+  digital      ProdutoDigital?
+  items        VendaItem[]
+  estoques     Estoque[]
+}
+
+model ProdutoAgrupado {
+  id         Int     @id @default(autoincrement())
+  produto    Produto @relation(name: "origem", fields: [produtoId], references: [id])
+  agrupado   Produto @relation(name: "referente", fields: [agrupadoId], references: [id])
+  produtoId  Int
+  agrupadoId Int
+}
+
+model ProdutoDigital {
+  id        Int     @id @default(autoincrement())
+  produto   Produto @relation(fields: [produtoId], references: [id])
+  produtoId Int     @unique
+  link      String
+}
+
+model ProdutoConfiguravel {
+  id        Int            @id @default(autoincrement())
+  produto   Produto        @relation(fields: [produtoId], references: [id])
+  produtoId Int            @unique
+  tamanho   ProdutoTamanho
+  cor       ProdutoCor
+}
+
+enum ProdutoTamanho {
+  P
+  M
+  G
+  GG
+}
+
+enum ProdutoCor {
+  Amarelo
+  Vermelho
+  Azul
+  Preto
+  Branco
+}
+
+enum ProdutoTipo {
+  Simples
+  Configuravel
+  Agrupado
+  Digital
+}
+
+model Venda {
+  id         Int         @id @default(autoincrement())
+  cliente    Cliente     @relation(fields: [clienteId], references: [id])
+  clienteId  Int
+  descricao  String
+  valorTotal Decimal     @db.Decimal(10,2)
+  items      VendaItem[]
+  criado     DateTime    @default(now())
+  alterado   DateTime?   @updatedAt
+}
+
+model VendaItem {
+  id            Int     @id @default(autoincrement())
+  venda         Venda   @relation(fields: [vendaId], references: [id])
+  produto       Produto @relation(fields: [produtoId], references: [id])
+  vendaId       Int
+  produtoId     Int
+  quantidade    Int
+  nome          String
+  tipo          ProdutoTipo
+  valorUnitario Decimal @db.Decimal(10,2)
+  valorTotal    Decimal @db.Decimal(10,2)
+  dados         Json?   @db.Json
+}
+
+model Usuario {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  senha    String
+  criado   DateTime  @default(now())
+  alterado DateTime? @updatedAt
+}
+
+model Cliente {
+  id    Int     @id @default(autoincrement())
+  nome  String
+  cpf   String
+  email String
+  venda Venda[]
+}
+
+model Estoque {
+  id         Int             @id @default(autoincrement())
+  produto    Produto         @relation(fields: [produtoId], references: [id])
+  situacao   EstoqueSituacao
+  produtoId  Int
+  quantidade Int
+  criado     DateTime        @default(now())
+  alterado   DateTime?       @updatedAt
+}
+
+enum EstoqueSituacao {
+  Disponivel
+  Indisponivel
+}
